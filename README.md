@@ -1,5 +1,7 @@
 # gin-cache-control
 
+[![CI](https://github.com/himkit/gin-cache-control/actions/workflows/ci.yml/badge.svg)](https://github.com/himkit/gin-cache-control/actions/workflows/ci.yml)
+
 Small Gin middleware for writing `Cache-Control` and Cloudflare cache headers.
 
 - Per-route by default
