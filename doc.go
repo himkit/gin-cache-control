@@ -9,6 +9,9 @@
 // 3xx status codes, no Authorization request header, no Set-Cookie response
 // header, and no existing Cache-Control response header.
 //
+// Use WithCondition for request-level opt-in or opt-out before the policy and
+// default guards run.
+//
 // Cloudflare support is opt-in. Use WithCloudflare to mirror Cache-Control into
 // Cloudflare-CDN-Cache-Control, or WithCloudflareDirectives to set a separate
 // Cloudflare policy. Use WithCloudflareTags and WithCloudflareTagFunc to emit

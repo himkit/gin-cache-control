@@ -3,6 +3,7 @@ package cachecontrol
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -238,6 +239,81 @@ func TestPolicyFunc(t *testing.T) {
 
 		if got := responseHeader(w, "Cache-Control"); got != "private, max-age=120" {
 			t.Fatalf("Cache-Control = %q, want %q", got, "private, max-age=120")
+		}
+	})
+}
+
+func TestWithCondition(t *testing.T) {
+	t.Run("false skips headers", func(t *testing.T) {
+		w := performRequest(http.MethodGet, "/", Public(time.Minute, WithCondition(func(c *gin.Context) bool {
+			return false
+		})), okHandler)
+
+		if got := responseHeader(w, "Cache-Control"); got != "" {
+			t.Fatalf("Cache-Control = %q, want empty", got)
+		}
+	})
+
+	t.Run("true writes headers", func(t *testing.T) {
+		w := performRequest(http.MethodGet, "/", Public(time.Minute, WithCondition(func(c *gin.Context) bool {
+			return true
+		})), okHandler)
+
+		if got := responseHeader(w, "Cache-Control"); got != "public, max-age=60" {
+			t.Fatalf("Cache-Control = %q, want %q", got, "public, max-age=60")
+		}
+	})
+
+	t.Run("allows only Token and Basic authorization", func(t *testing.T) {
+		tests := []struct {
+			name       string
+			auth       string
+			wantHeader string
+		}{
+			{name: "Token auth", auth: "Token abc123", wantHeader: "public, max-age=60"},
+			{name: "Basic auth", auth: "Basic dXNlcjpwYXNz", wantHeader: "public, max-age=60"},
+			{name: "Bearer auth", auth: "Bearer xyz", wantHeader: ""},
+			{name: "no auth", auth: "", wantHeader: "public, max-age=60"},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				w := performRequest(http.MethodGet, "/", Public(time.Minute,
+					WithAllowAuthorization(),
+					WithCondition(func(c *gin.Context) bool {
+						auth := c.GetHeader("Authorization")
+						return auth == "" || strings.HasPrefix(auth, "Token ") || strings.HasPrefix(auth, "Basic ")
+					}),
+				), okHandler, func(req *http.Request) {
+					if tt.auth != "" {
+						req.Header.Set("Authorization", tt.auth)
+					}
+				})
+
+				if got := responseHeader(w, "Cache-Control"); got != tt.wantHeader {
+					t.Fatalf("Cache-Control = %q, want %q", got, tt.wantHeader)
+				}
+			})
+		}
+	})
+
+	t.Run("condition runs before policy", func(t *testing.T) {
+		policyCalled := false
+		w := performRequest(http.MethodGet, "/", Public(time.Minute,
+			WithCondition(func(c *gin.Context) bool {
+				return false
+			}),
+			WithPolicy(func(c *gin.Context) (Config, bool) {
+				policyCalled = true
+				return Config{Directives: Directives{Public: true, MaxAge: time.Minute}}, true
+			}),
+		), okHandler)
+
+		if got := responseHeader(w, "Cache-Control"); got != "" {
+			t.Fatalf("Cache-Control = %q, want empty", got)
+		}
+		if policyCalled {
+			t.Fatalf("Policy should not be called when Condition returns false")
 		}
 	})
 }

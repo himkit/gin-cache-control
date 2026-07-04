@@ -33,6 +33,10 @@ type Config struct {
 	// Policy computes a request-specific config before the first response write.
 	Policy PolicyFunc
 
+	// Condition decides whether to process this request. Returning false skips
+	// all cache headers without running Policy or other guards.
+	Condition func(*gin.Context) bool
+
 	// Cloudflare controls Cloudflare-CDN-Cache-Control and Cache-Tag headers.
 	Cloudflare CloudflareConfig
 
@@ -143,6 +147,9 @@ func FromConfig(cfg Config) gin.HandlerFunc {
 			applied = true
 
 			active := cfg
+			if active.Condition != nil && !active.Condition(c) {
+				return
+			}
 			if active.Policy != nil {
 				next, ok := active.Policy(c)
 				if !ok {
@@ -273,6 +280,14 @@ func WithCloudflareOverride() Option {
 func WithPolicy(fn PolicyFunc) Option {
 	return func(cfg *Config) {
 		cfg.Policy = fn
+	}
+}
+
+// WithCondition decides whether to process the request at all.
+// Returning false skips all cache headers without running Policy or other guards.
+func WithCondition(fn func(*gin.Context) bool) Option {
+	return func(cfg *Config) {
+		cfg.Condition = fn
 	}
 }
 
