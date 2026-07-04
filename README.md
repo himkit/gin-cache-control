@@ -1,6 +1,7 @@
 # gin-cache-control
 
 [![CI](https://github.com/himkit/gin-cache-control/actions/workflows/ci.yml/badge.svg)](https://github.com/himkit/gin-cache-control/actions/workflows/ci.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/himkit/gin-cache-control.svg)](https://pkg.go.dev/github.com/himkit/gin-cache-control)
 
 Small Gin middleware for writing `Cache-Control` and Cloudflare cache headers.
 
@@ -179,6 +180,14 @@ WithStatuses(statuses...)
 WithOverride()
 WithAllowAuthorization()
 WithAllowSetCookie()
+```
+
+## Development
+
+```bash
+make test
+make lint
+make coverage
 ```
 
 ## License

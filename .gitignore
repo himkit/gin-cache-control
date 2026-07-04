@@ -1,1 +1,41 @@
+# Local agent planning notes
 docs/superpowers/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Go build outputs
+/bin/
+/build/
+/dist/
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+
+# Go test and profiling artifacts
+coverage.out
+*.coverprofile
+*.prof
+cpu.out
+mem.out
+
+# Temporary files
+/tmp/
+*.tmp
+*.log
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
