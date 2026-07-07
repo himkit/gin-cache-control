@@ -1,0 +1,32 @@
+name: Refresh pkg.go.dev
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    name: Refresh
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Refresh Go proxy and pkg.go.dev
+        run: |
+          module="$(go list -m)"
+          version="${GITHUB_REF_NAME}"
+
+          GOPROXY=https://proxy.golang.org go list -m "${module}@${version}"
+          curl --retry 3 --retry-all-errors -sS -o /dev/null -w "pkg.go.dev HTTP %{http_code}\n" "https://pkg.go.dev/${module}@${version}"
