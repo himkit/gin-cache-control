@@ -12,6 +12,9 @@ jobs:
   refresh:
     name: Refresh
     runs-on: ubuntu-latest
+    environment:
+      name: pkg.go.dev
+      url: https://pkg.go.dev/github.com/himkit/gin-cache-control@${{ github.ref_name }}
 
     steps:
       - name: Checkout
